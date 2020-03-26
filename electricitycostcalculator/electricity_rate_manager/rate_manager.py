@@ -7,7 +7,7 @@ import pandas as pd
 import pytz
 
 
-class CostCalculator(object):
+class ElectricityRateManager(object):
     """
     This class is used to manipulate the building electricity cost:
         - Bill calculation given a Smart Meter energy timeseries

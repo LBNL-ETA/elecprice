@@ -1,8 +1,8 @@
 __author__ = 'Olivier Van Cutsem'
 
 # Import COST CALCULATOR LIB
-from electricitycostcalculator.cost_calculator.tariff_structure import *
-from electricitycostcalculator.cost_calculator.rate_structure import *
+from electricitycostcalculator.electricity_rate_manager.tariff_structure import *
+from electricitycostcalculator.electricity_rate_manager.rate_structure import *
 
 import time
 from datetime import datetime
@@ -14,7 +14,8 @@ from dateutil.parser import parse
 
 # ----------- FUNCTIONS SPECIFIC TO OpenEI REQUESTS -------------- #
 THIS_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
-PDP_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
+CACHE_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/' + 'cache_api/'
+PDP_DEFAULT_FILENAME = "PDP_events.json"
 
 SUFFIX_REVISED = '_revised'  # this is the suffix we added to the json filename after correctly the OpenEI data manually
 
@@ -64,18 +65,23 @@ class OpenEI_tariff(object):
     def set_pdp_events(self, pdp_events_dict):
         self.pdp_events = pdp_events_dict
 
-    def call_api(self, store_as_json=None):
+    def call_api(self, use_cached_file=True, store_as_json=True):
 
+        # First, check if there exist a cached version of the file
+        if use_cached_file:
+            r = self.read_from_json()
+            if r == 0:
+                return
+
+        # Else, call the OpenEI API
         r = requests.get(self.URL_OPENEI, params=self.req_param)
         data_openei = r.json()
         data_filtered = []
 
         for data_block in data_openei['items']:
-            print((data_block['name']))
             # Check the tariff name, this is stored in the field "name"
             if self.tariff_rate_of_interest not in data_block['name'] and self.tariff_rate_of_interest + '-' not in data_block['name']:
                 continue
-            print((" - {0}".format(data_block['name'])))
 
             # Check the wiring option
             if self.phase_wing is not None:
@@ -91,7 +97,6 @@ class OpenEI_tariff(object):
                 if self.distrib_level_of_interest not in data_block['name']:
                     continue
 
-            print((" -- {0}".format(data_block['name'])))
             # Check the Time of Use option
             if (self.tou and 'TOU' not in data_block['name']) or (not self.tou and 'TOU' in data_block['name']):
                 continue
@@ -154,9 +159,9 @@ class OpenEI_tariff(object):
         self.data_openei = data_filtered
 
         # Store the result of this processed API request in a JSON file that has the name built from the tariff info
-        if store_as_json is not None:
+        if store_as_json:
             filename = self.json_filename
-            with open(THIS_PATH+filename+'.json', 'w') as outfile:
+            with open(CACHE_FOLDER+filename+'.json', 'w') as outfile:
                 json.dump(data_filtered, outfile, indent=2, sort_keys=True)
 
     def read_from_json(self, filename=None):
@@ -170,9 +175,7 @@ class OpenEI_tariff(object):
 
         try:
             if filename == None:
-
-                filename = THIS_PATH+str(self.json_filename)+str(SUFFIX_REVISED)+'.json'
-                #print (filename)
+                filename = CACHE_FOLDER+str(self.json_filename)+'.json'
             with open(filename, 'r') as input_file:
                 try:
                     self.data_openei = json.load(input_file)
@@ -219,7 +222,7 @@ class OpenEI_tariff(object):
 
 # --- Inject data from OpenEI_tariff object to the Bill Calculator
 
-def tariff_struct_from_openei_data(openei_tarif_obj, bill_calculator, pdp_event_filenames="PDP_events.json"):
+def tariff_struct_from_openei_data(openei_tarif_obj, bill_calculator, pdp_events_path=None):
     """
     Analyze the content of an OpenEI request in order to fill a CostCalculator object
     :param openei_tarif_obj: an instance of OpenEI_tariff that already call the API
@@ -304,9 +307,13 @@ def tariff_struct_from_openei_data(openei_tarif_obj, bill_calculator, pdp_event_
     # Analyse PdP events
 
     if openei_tarif_obj.pdp_participate:
+
+        if pdp_events_path is None:
+            pdp_events_path = CACHE_FOLDER + PDP_DEFAULT_FILENAME
+
         pdp_data = []
         try:
-            pdp_data = populate_pdp_events_from_json(openei_tarif_obj, pdp_event_filenames=pdp_event_filenames)
+            pdp_data = populate_pdp_events_from_json(openei_tarif_obj, pdp_events_path=pdp_events_path)
         except EnvironmentError:
             print("PdP events: can't open file")
 
@@ -318,12 +325,12 @@ def tariff_struct_from_openei_data(openei_tarif_obj, bill_calculator, pdp_event_
                 bill_calculator.add_tariff(TouEnergyChargeTariff(pdp_dates, tariff_pdp_obj),
                                            str(TariffType.PDP_ENERGY_CHARGE.value))
 
-def populate_pdp_events_from_json(openei_tarif_obj, pdp_event_filenames='PDP_events.json'):
+def populate_pdp_events_from_json(openei_tarif_obj, pdp_events_path):
     empty = []
-    if not os.path.exists(PDP_PATH+pdp_event_filenames):
-        with open(PDP_PATH+pdp_event_filenames, 'w') as pdp_file:
+    if not os.path.exists(pdp_events_path):
+        with open(pdp_events_path, 'w') as pdp_file:
             json.dump(empty, pdp_file)
-    with open(PDP_PATH+pdp_event_filenames, 'r') as pdp_file:
+    with open(pdp_events_path, 'r') as pdp_file:
         try:
             pdp_data = json.load(pdp_file)
             openei_tarif_obj.set_pdp_events(pdp_data)
@@ -331,9 +338,9 @@ def populate_pdp_events_from_json(openei_tarif_obj, pdp_event_filenames='PDP_eve
         except ValueError:
             print("PdP events: can't parse json")
 
-def update_pdp_json(openei_tarif_obj, pdp_dict, pdp_event_filenames='PDP_events.json'):
+def update_pdp_json(openei_tarif_obj, pdp_dict, pdp_events_path):
     if cmp(openei_tarif_obj.pdp_events, pdp_dict) != 0:
-        with open(PDP_PATH + pdp_event_filenames, 'w') as pdp_fp:
+        with open(pdp_events_path, 'w') as pdp_fp:
             json.dump(pdp_dict, pdp_fp)
         openei_tarif_obj.set_pdp_events(pdp_dict)
         return True
