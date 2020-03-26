@@ -40,13 +40,13 @@ if __name__ == '__main__':
     ### Reading OpenEI-based tariff rates, and binding it to the ElectricityRateManager
     #
 
-    print("--- Calling OpenEI API or data reading from JSON ...")
+    print("--- Calling OpenEI API ...")
 
     # (a) Example of using the OpenEI WEB API
 
     tariff_openei_apidata = OpenEI_tariff(utility_id='14328',
                                        sector='Commercial',
-                                       tariff_rate_of_interest='A-6',
+                                       tariff_rate_of_interest='E-19',
                                        distrib_level_of_interest=None,
                                        # it is at the secondary level, so not specified in the name
                                        phasewing=None,
@@ -58,19 +58,12 @@ if __name__ == '__main__':
 
     # (b) Example of reading local data, encoded according to OpenEI structure
 
-    tariff_openei_jsondata = OpenEI_tariff(utility_id='14328', sector='Commercial', tariff_rate_of_interest='B-19S')
-
-    if tariff_openei_jsondata.read_from_json(filename="tariff_revised/u14328_Commercial_B19S_revised.json") == 0:
-        print("Tariff read from JSON successful")
-    else:
-        print("An error occurred when reading the JSON file")
-        exit()
 
     elecrate_manager = ElectricityRateManager()
 
-    # Biding an instance of ElectricityRateManager to a specific OpenEI tariff
+    # Binding an instance of ElectricityRateManager to a specific OpenEI tariff
 
-    tariff_struct_from_openei_data(tariff_openei_jsondata, elecrate_manager)  # This analyses the raw data from the openEI request and populate the "CostCalculator" object
+    tariff_struct_from_openei_data(tariff_openei_apidata, elecrate_manager)  # This analyses the raw data from the openEI request and populate the "CostCalculator" object
 
     # BILLING PERIOD
     start_date_bill = datetime(2017, 7, 1, hour=0, minute=0, second=0)
@@ -87,6 +80,19 @@ if __name__ == '__main__':
     print(t)
 
     # 2) Get the electricity price per type of metric, for a specific period
+
+    tariff_openei_jsondata = OpenEI_tariff(utility_id='14328', sector='Commercial', tariff_rate_of_interest='B-19S')
+
+    if tariff_openei_jsondata.read_from_json(filename="tariff_revised/u14328_Commercial_B19S_revised.json") == 0:
+        print("Tariff read from JSON successful")
+    else:
+        print("An error occurred when reading the JSON file")
+        exit()
+
+    elecrate_manager = ElectricityRateManager()
+
+    tariff_struct_from_openei_data(tariff_openei_jsondata, elecrate_manager)  # This analyses the raw data from the openEI request and populate the "CostCalculator" object
+
 
     start_date_sig= datetime(2020, 1, 1, hour=0, minute=0, second=0)
     end_date_sig = datetime(2020, 1, 7, hour=23, minute=59, second=59)
