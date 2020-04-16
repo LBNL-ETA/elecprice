@@ -14,7 +14,8 @@ def get_caiso_price(start_date=datetime.datetime(2019, 1, 1, 8, 0, 0),
                      end_date=datetime.datetime(2019, 1, 2, 8, 0, 0),
                      market_run_id='RTM', 
                      nodes=['DLAP_PGAE-APND', 'DLAP_SCE-APND'],
-                     tz_name='UTC'):
+                     tz_name='UTC',
+                     dir_name='summary_data'):
 
     if not isinstance(nodes, list):
         nodes = [nodes]
@@ -31,9 +32,14 @@ def get_caiso_price(start_date=datetime.datetime(2019, 1, 1, 8, 0, 0),
 
     summary_filename = "caiso_LMP_" + str(start_date.year) + "_" + market_run_id + "_" + nodes[0][:4] \
                               + "_interval_ending_summary.csv"
-    
+
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
+
+    summary_path = os.path.join(dir_name, summary_filename)
+
     summary_df = pd.pivot_table(dataframes, values='MW', index=['INTERVALENDTIME_GMT', 'PNODE_RESMRID'], columns='XML_DATA_ITEM', aggfunc=sum)
-    summary_df.to_csv(summary_filename)
+    summary_df.to_csv(summary_path)
 
     return summary_df
 
@@ -42,7 +48,8 @@ def get_CAISO_lmp(start_date=datetime.datetime(2019, 1, 1, 8, 0, 0),
                   end_date=datetime.datetime(2019, 1, 2, 8, 0, 0),
                   market_run_id='DAM', 
                   node='DLAP_SCE-APND',
-                  tz_name='UTC'):
+                  tz_name='UTC',
+                  dir_name='data'):
 
     url = get_api_url(start_date, end_date, market_run_id, node, tz_name)
 
@@ -50,29 +57,37 @@ def get_CAISO_lmp(start_date=datetime.datetime(2019, 1, 1, 8, 0, 0),
     end = end_date.strftime("%Y%m%d")
 
     filename = "caiso_lmp_node_" + node + "_" + market_run_id + "_" + start + "_" + end + ".csv"
-    old_filename = download_and_extract_csv(url)
-    os.rename(old_filename, filename)
+    old_filename = download_and_extract_csv(url, dir_name)
+    new_filename = os.path.join(dir_name, filename)
+    os.rename(old_filename, new_filename)
     
     time.sleep(5)
 
-    return pd.read_csv(filename)
+    return pd.read_csv(new_filename)
 
-# Download ZIP from URL and extract the CSV file, return the CSV file name.
-def download_and_extract_csv(url):
+# Download ZIP from URL and extract the CSV file to directory DIR_NAME, return the CSV file name.
+def download_and_extract_csv(url, dir_name):
     print("Getting url: ", url)
     caiso_data = requests.get(url, stream=False)
 
-    filename = caiso_data.headers['Content-Disposition'][17:-1]
-    print("Downloaded zip: ", filename)
-    with open(filename, 'wb') as f:
+    zip_filename = caiso_data.headers['Content-Disposition'][17:-1]
+
+    if not os.path.exists(dir_name):
+        os.mkdir(dir_name)
+
+    zip_path = os.path.join(dir_name, zip_filename)
+
+    with open(zip_path, 'wb') as f:
         f.write(caiso_data.content)
+    print("Downloaded zip: ", zip_path)
 
-    with ZipFile(filename, 'r') as zipObj:
+    with ZipFile(zip_path, 'r') as zipObj:
         file_csv = zipObj.namelist()[0]
-        print("Downloaded csv: ", file_csv, "\n")
-        zipObj.extract(file_csv)
+        csv_path = os.path.join(dir_name, file_csv)
+        zipObj.extract(file_csv, path=dir_name)
+    print("Downloaded csv: ", csv_path, "\n")
 
-    return file_csv
+    return csv_path
 
 # Return CAISO API URL according to the parameters.
 def get_api_url(start_date, end_date, market_run_id, node, tz_name):
