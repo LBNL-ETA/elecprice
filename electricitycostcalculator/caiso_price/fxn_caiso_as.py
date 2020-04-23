@@ -12,21 +12,24 @@ from zipfile import ZipFile
 # NODES could be single string or a list.
 def get_caiso_price(start_date=datetime.datetime(2019, 1, 1, 8, 0, 0),
                      end_date=datetime.datetime(2019, 1, 2, 8, 0, 0),
-                     market_run_id='RTM', 
+                     market_run_id='RTM',
                      nodes=['DLAP_PGAE-APND', 'DLAP_SCE-APND'],
                      tz_name='UTC',
-                     dir_name='summary_data'):
+                     dir_name='summary_data',
+                     save=False):
 
     if not isinstance(nodes, list):
         nodes = [nodes]
 
     dataframes = None
     for node in nodes:
-        df = get_CAISO_lmp(start_date, end_date, market_run_id, node, tz_name)
+        df = get_CAISO_lmp(start_date, end_date, market_run_id, node, tz_name, save=save)
         if dataframes is not None:
             dataframes = dataframes.append(df)
         else:
             dataframes = df
+
+        time.sleep(5)
 
     dataframes = dataframes[['INTERVALENDTIME_GMT', 'XML_DATA_ITEM', 'PNODE_RESMRID', 'MW']]
 
@@ -49,7 +52,8 @@ def get_CAISO_lmp(start_date=datetime.datetime(2019, 1, 1, 8, 0, 0),
                   market_run_id='DAM', 
                   node='DLAP_SCE-APND',
                   tz_name='UTC',
-                  dir_name='data'):
+                  dir_name='data',
+                  save=False):
 
     url = get_api_url(start_date, end_date, market_run_id, node, tz_name)
 
@@ -57,16 +61,20 @@ def get_CAISO_lmp(start_date=datetime.datetime(2019, 1, 1, 8, 0, 0),
     end = end_date.strftime("%Y%m%d")
 
     filename = "caiso_lmp_node_" + node + "_" + market_run_id + "_" + start + "_" + end + ".csv"
-    old_filename = download_and_extract_csv(url, dir_name)
-    new_filename = os.path.join(dir_name, filename)
-    os.rename(old_filename, new_filename)
+    old_filename = download_and_extract_csv(url, dir_name, save)
     
-    time.sleep(5)
+    df = pd.read_csv(old_filename)
 
-    return pd.read_csv(new_filename)
+    if save:
+        new_filename = os.path.join(dir_name, filename)
+        os.rename(old_filename, new_filename)
+    else:
+        os.remove(old_filename)
 
-# Download ZIP from URL and extract the CSV file to directory DIR_NAME, return the CSV file name.
-def download_and_extract_csv(url, dir_name):
+    return df
+
+# Download ZIP from URL and extract the CSV file to directory DIR_NAME, return the CSV file name; save zip file if SAVE_ZIP.
+def download_and_extract_csv(url, dir_name, save_zip):
     print("Getting url: ", url)
     caiso_data = requests.get(url, stream=False)
 
@@ -83,9 +91,16 @@ def download_and_extract_csv(url, dir_name):
 
     with ZipFile(zip_path, 'r') as zipObj:
         file_csv = zipObj.namelist()[0]
+
+        if file_csv[-3:] != 'csv':
+            raise ValueError('Extracted file is invalid: not CSV.')
+
         csv_path = os.path.join(dir_name, file_csv)
         zipObj.extract(file_csv, path=dir_name)
     print("Downloaded csv: ", csv_path, "\n")
+
+    if not save_zip:
+        os.remove(zip_path)
 
     return csv_path
 
