@@ -123,13 +123,53 @@ class ElectricityRateManager(object):
                 tariff_cost_list = tariff_block.compute_bill(df, column_data)  # this returns a dict of time-period pointing to tuple that contains both the metric of the bill and the cost
                 for time_label, bill_data in list(tariff_cost_list.items()):
                     self.update_bill_structure(ret[time_label], label, bill_data)
+                    print('time_label:\n', time_label,'label:\n', label,'bill_ddata:\n', bill_data)
+
 
         if monthly_detailed is False:  # Aggregate all the months
             return self.aggregate_monthly_bill(ret)
         else:
             return ret
+        
+#     def compute_tou_tier_bill(self, df, column_data=None, monthly_detailed=False):
+#     ## Serena   
+    
+#         ret = {}
+
+#         # Initialize the returned structure
+
+#         t_s = df.index[0]
+#         t_i = datetime(year=t_s.year, month=t_s.month, day=1, tzinfo=t_s.tzinfo)
+#         while t_i <= df.index[-1]:
+#             ret[t_i.strftime("%Y-%m")] = {}
+#             for k in list(self.__tariffstructures.keys()):
+#                 if self.type_tariffs_map[k] == ChargeType.DEMAND:
+#                     ret[t_i.strftime("%Y-%m")][k] = {}  # a dict of price -> (max, cost)
+#                 else:
+#                     ret[t_i.strftime("%Y-%m")][k] = (0, 0)  # a tuple
+
+#             t_i += relativedelta(months=+1)
+
+#         # Compute the bill for each of the tariff type, for each month
+#         for label, tariff_data in list(self.__tariffstructures.items()):
+#             l_blocks = self.get_tariff_struct(label, (df.index[0], df.index[-1]))  # get all the tariff blocks for this period and this tariff type
+#             for tariff_block in l_blocks:
+#                 #tariff_cost_list = tariff_block.compute_bill(df, column_data)  # this returns a dict of time-period pointing to tuple that contains both the metric of the bill and the cost
+#                 tariff_cost_list = tariff_block.compute_bill(df, column_data)
+                
+#                 for time_label, bill_data in list(tariff_cost_list.items()):
+#                     self.update_bill_structure(ret[time_label], label, bill_data)
+#                     print('time_label:\n', time_label,'label:\n', label,'bill_ddata:\n', bill_data)
+
+#         if monthly_detailed is False:  # Aggregate all the months
+#             print('monthly_detailed')
+#             return self.aggregate_monthly_bill(ret)
+
+#         else:
+#             return ret
 
     def get_electricity_price(self, range_date, timestep):
+        
         """
 
         This function creates the electricity price signal for the specified time frame 'range_date', sampled at 'timestep'

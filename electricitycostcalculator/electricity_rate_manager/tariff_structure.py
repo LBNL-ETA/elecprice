@@ -397,6 +397,7 @@ class TouEnergyChargeTariff(TimeOfUseTariff):
     """
     This class represents a Time Of Use Energy Charge tariff
     """
+    ## TOU Rate Schedule
 
     def __init__(self, dates, time_schedule, unit_metric=TariffElemMetricUnit.EN_KWH, unit_cost=TariffElemCostUnit.DOLLAR, name=None):
         """
@@ -415,32 +416,196 @@ class TouEnergyChargeTariff(TimeOfUseTariff):
         :return: a tuple (float, float) -> (cost, tot_energy)
         """
 
-        # Iterates over the days
+        # Iterates over the days 
         energy = 0.0
         cost = 0.0
+        
+        #number of days in the billing period
+        first_day = df.index[0].day
+        last_day = df.index[-1].day
+        nb_days = last_day - first_day + 1
 
         # TODO: check for blockrate instead of assuming it's a float !
 
         for idx, df_day in df.groupby(df.index.date):
 
             daily_rate = self.rate_schedule.get_daily_rate(df_day.index[0])
-            df_prices = self.get_daily_price_dataframe(daily_rate, df_day)
-
+            df_prices = self.get_daily_price_dataframe(daily_rate, df_day) #these are just one 
+            
             # Unit and cost scale
             mult_energy_unit = float(self.unit_metric.value)
             mult_cost_unit = float(self.unit_cost.value)
+            print('mult_energy_unit:', mult_energy_unit)
+            print('mult_cost_unit:', mult_cost_unit)
+            
 
-            # Cumulate the energy over the month
+            
+            # Serena TODO: change to operate over the hours
+            m = df_day.index[0].month
+            #print('df_day:', df_day.index[3])
+            #in each hour of the day 
+            for i in range(24): 
+                h = df_day.index[i].hour
+                hourly_rate = self.rate_schedule.get_rate_in_day(daily_rate, (h,m))
+                print('hourly_rate:', hourly_rate)
+                if data_col is not None:
+                    df_values_in_hour = df_day.loc[i, data_col]
+                else:
+                    df_values_in_hour = df_day[i]
+                    print('df_values_in_hour:',df_values_in_hour)
 
-            if data_col is not None:
-                df_values_in_day = df_day.loc[:, data_col]
-            else:
-                df_values_in_day = df_day[:]
 
-            energy += sum(df_values_in_day) / mult_energy_unit
 
+
+            # Cumulate the energy over the hour
+
+            
+
+                energy += df_values_in_hour / mult_energy_unit
             # Cumulate the bill over the month
-            cost += sum(mult_cost_unit * df_values_in_day.multiply(df_prices.loc[:, 'price'].tolist())) / mult_energy_unit
+                print('daily_rate:', daily_rate)
+                #print('energy:': energy)
+            #print('daily_prices:',df_prices)
+            
+
+            
+                if isinstance(daily_rate[0],float): #only tou
+                    cost += mult_cost_unit * df_values_in_hour * df_prices.loc[i, 'price'] / mult_energy_unit
+                    print('rate is just TOU', energy, cost)
+            
+                else:#has tiers
+               
+                    if energy <= daily_rate[0][1] * nb_days: 
+                        #daily_rate_0 = [daily_rate[i][0] for i in range(len(daily_rate))]
+                        daily_rate_0 = daily_rate[i][0] 
+                        #df_prices = self.get_daily_price_dataframe(daily_rate_0, df_day)
+                        cost += mult_cost_unit * df_values_in_hour * daily_rate_0 / mult_energy_unit
+                        print('rate in first tier', energy, cost)
+                    #if you're under the monthly threshold (middle value * nb_days) then keep with the first value of the daily_rate tuples. 
+                    elif energy > daily_rate[0][1] * nb_days:
+#                         daily_rate_1 = [daily_rate[i][2] for i in range(len(daily_rate))]
+                        daily_rate_1 = daily_rate[i][2] 
+                        cost += mult_cost_unit * df_values_in_hour * daily_rate_1 / mult_energy_unit
+
+#                         df_prices = self.get_daily_price_dataframe(daily_rate_1, df_day)
+#                         cost += sum(mult_cost_unit * df_values_in_day.multiply(df_prices.loc[:, 'price'].tolist())) / mult_energy_unit
+                        print('rate in second tier', energy, cost)
+                #if you're above the monthly threshold, then go with the third value of the daily_rate tuples
+            
 
         return energy, cost
+    
+    
+#     def compute_tiered_monthly_bill(df):
+#         #serena
+#         #df is the raw meter data
+        
+        
+#         """
+#         Compute the bill due to a TOU tariff
+#         :param df: a pandas dataframe
+#         :return: a tuple (float, float) -> (cost, tot_energy)
+#         """
+
+#         # Iterates over the days
+#         energy = 0.0
+#         cost = 0.0
+
+#         # TODO: check for blockrate instead of assuming it's a float !
+
+#         for idx, df_day in df.groupby(df.index.date):
+
+#             daily_rate = self.rate_schedule.get_daily_rate(df_day.index[0])
+#             df_prices = self.get_daily_price_dataframe(daily_rate, df_day)
+
+#             # Unit and cost scale
+#             mult_energy_unit = float(self.unit_metric.value)
+#             mult_cost_unit = float(self.unit_cost.value)
+
+#             # Cumulate the energy over the month
+
+#             if data_col is not None:
+#                 df_values_in_day = df_day.loc[:, data_col]
+#             else:
+#                 df_values_in_day = df_day[:]
+
+#             energy += sum(df_values_in_day) / mult_energy_unit
+
+#             # Cumulate the bill over the month
+# #             cost += sum(mult_cost_unit * df_values_in_day.multiply(df_prices.loc[:, 'price'].tolist())) / mult_energy_unit
+#             print(mult_cost_unit, mult_energy_unit, df_values_in_day)
+
+#         return energy, cost
+        
+        
+        
+#         """
+#         Compute the bill due to a TOU-tiered tariff
+#         tariff: tariff struct
+#         :param df: a pandas dataframe with the energy consumption for the time period / year
+#         :return: a tuple (float, float) -> (cost, tot_energy)
+#         """
+        
+        
+#         #add columns
+#         df['Cummulative Sum (Wh)'] = np.cumsum(df_meter)
+#         df['month'] = df_meter.index.month #1 to 12
+#         df['weekday']= df_meter.index.weekday #0 to 6
+#         df['hour'] = df_meter.index.hour #0 to 23
+#         df['year'] = df_meter.index.year
+#         df['bill'] = np.zeros(len(df_meter))
+
+        
+#         #create map
+#         period_map = np.array([])
+#         for i in np.arange(len(df)):
+#             month = df['month'][i]-1 #index month
+#             hour = df['hour'][i] #index hour
+#             if df['weekday'][i] == 5 or df['weekday'][i] == 6: #weekend
+#                 period = tariff['0weekends'][month][hour] 
+#                 period_map = np.append(period_map,period)
+
+#             else: #weekday
+#                 period = tariff['0weekdays'][month][hour] 
+#                 period_map = np.append(period_map,period)
+
+
+#         df['period'] = period_map
+        
+#         ## for each row in df: [billing(df_meter.loc[i,:], days_in_month,tariff) 
+#         #for i in df_meter.index:
+        
+#     #index by period
+#         period = int(df_row['period'])  
+
+#         month = int(df_row['month'])
+#         year = int(df_row['year'])
+        
+#         days_in_month=[np.array(monthrange(year, i))[1] for i in np.arange(1,13)] 
+        
+#         days = int(days_in_month[month-1]) #number of days in the month to determine the month's threshold values
+#         cumsum = float(df_row['Cummulative Sum (Wh)']/1000) #kWh cummulative sum 
+#         energy = float(df_row['NS1']['sum'])/1000 
+
+#         #number of tiers --> index is the tier 
+#         thresh0_0 = float(tariff['0rates'][period][0]['max'])*days #kWh/month
+#         rate0_0 = float(tariff['0rates'][period][0]['rate']) #$/kWh
+#         rate0_1 = float(tariff['0rates'][period][1]['rate']) #$/kWh
+
+
+#         bill = 0
+
+#         if cumsum < thresh0_0: 
+#             bill = energy*rate0_0
+
+#         if cumsum > thresh0_0 and cumsum<= thresh0_1: 
+#             bill = energy*rate0_1
+
+#         if cumsum > thresh0_1: 
+#             bill = energy*rate0_2
+
+#         return cumsum, bill
+        
+
+
 

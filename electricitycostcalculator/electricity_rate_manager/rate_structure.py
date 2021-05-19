@@ -12,6 +12,7 @@ class ChargeType(Enum):
     FIXED = 'fix',
     DEMAND = 'demand',
     ENERGY = 'energy',
+    #TIERED = 'tiered'
 
 
 class TouRateSchedule:
