@@ -4,52 +4,35 @@
     "country": "USA",
     "demandrateunit": "kW",
     "demandunits": "kW",
-    "description": "This schedule is available to residential customers who have either (1) been\r\nselected to be auto-transitioned to this rate schedule in April 2018 or (2) voluntarily\r\ndecided to opt-in to the rate.",
+    "description": "This schedule uses East Bay Community Energy generation charges for TOU-C in 2019 or 2020",
     "eiaid": 14328,
     "enddate": "2021-07-01T06:00:00.000Z",
-    "energycomments": "Adjustments included in Rate = Generation + Distribution + Transmission + Transmission Rate Adjustments + Reliability Services + Public Purpose Programs + Nuclear Decommissioning + Competition Transition Charges + Energy Cost Recovery Amount + DWR Bond + New System Generation Charge",
+    "energycomments": "Only the generation portion of rates",
     "energyratestructure": [
       [
         {
-          "max": 7.5,
-          "rate": 0.34229,
-          "unit": "kWh daily"
-        },
-        {
-          "rate": 0.41813,
+          "rate": 0.14284,
           "unit": "kWh daily"
         }
       ],
       [
         {
-          "max": 7.5,
-          "rate": 0.27885,
-          "unit": "kWh daily"
-        },
-        {
-          "rate": 0.35469,
+          "rate": 0.08993,
           "unit": "kWh daily"
         }
       ],
       [
         {
-          "max": 13.6,
-          "rate": 0.245199,
-          "unit": "kWh daily"
-        },
-        {
-          "rate": 0.32104,
+    
+          "rate": 0.09457,
           "unit": "kWh daily"
         }
+        
       ],
       [
         {
-          "max": 13.6,
-          "rate": 0.22787999,
-          "unit": "kWh daily"
-        },
-        {
-          "rate": 0.30372,
+
+          "rate": 0.07969,
           "unit": "kWh daily"
         }
       ]
@@ -682,7 +665,7 @@
         3
       ]
     ],
-    "fixedchargefirstmeter": 10,
+    "fixedchargefirstmeter": 30,
     "fixedchargeunits": "$/month",
     "flatdemandunit": "kW",
     "is_default": false,
@@ -702,7 +685,5 @@
     "startdate": "2018-07-01T06:00:00.000Z",
     "uri": "https://openei.org/apps/IURDB/rate/view/5d6eba3a5457a39b2f466f68",
     "utility": "Pacific Gas & Electric Co",
-    "baseline_compensation":  0.07584,
-    "compensation_charge_units":"$/kWh"
 
   }]

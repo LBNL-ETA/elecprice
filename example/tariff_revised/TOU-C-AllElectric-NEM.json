@@ -703,6 +703,28 @@
     "uri": "https://openei.org/apps/IURDB/rate/view/5d6eba3a5457a39b2f466f68",
     "utility": "Pacific Gas & Electric Co",
     "baseline_compensation":  0.07584,
+    "net_surplus_compensation": 
+      [
+      [
+        {
+          "rate": 0.03
+        }
+      ]
+    ],
+    "solar_nonbypassable_charge": 
+      [
+      [
+        {
+          "rate": 0.02252
+        }
+      ],
+      [
+        {
+          "rate": 0.02252
+        }
+      ]    
+        
+    ],
     "compensation_charge_units":"$/kWh"
 
   }]

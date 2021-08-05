@@ -12,44 +12,44 @@
       [
         {
           "max": 7.5,
-          "rate": 0.34229,
+          "rate": 0.2086381626,
           "unit": "kWh daily"
         },
         {
-          "rate": 0.41813,
+          "rate": 0.2579713242,
           "unit": "kWh daily"
         }
       ],
       [
         {
           "max": 7.5,
-          "rate": 0.27885,
+          "rate": 0.167371077,
           "unit": "kWh daily"
         },
         {
-          "rate": 0.35469,
+          "rate": 0.2167042386,
           "unit": "kWh daily"
         }
       ],
       [
         {
           "max": 13.6,
-          "rate": 0.245199,
+          "rate": 0.145481438,
           "unit": "kWh daily"
         },
         {
-          "rate": 0.32104,
+          "rate": 0.1948152501,
           "unit": "kWh daily"
         }
       ],
       [
         {
           "max": 13.6,
-          "rate": 0.22787999,
+          "rate": 0.1342155952,
           "unit": "kWh daily"
         },
         {
-          "rate": 0.30372,
+          "rate": 0.1835487633,
           "unit": "kWh daily"
         }
       ]
@@ -682,12 +682,12 @@
         3
       ]
     ],
-    "fixedchargefirstmeter": 10,
+    "fixedchargefirstmeter": 5,
     "fixedchargeunits": "$/month",
     "flatdemandunit": "kW",
     "is_default": false,
     "label": "5d6eba3a5457a39b2f466f68",
-    "name": "E-TOU-C Region T",
+    "name": "E-TOU-C CARE Region T",
     "revisions": [
       1567516122,
       1567672309,
@@ -702,7 +702,6 @@
     "startdate": "2018-07-01T06:00:00.000Z",
     "uri": "https://openei.org/apps/IURDB/rate/view/5d6eba3a5457a39b2f466f68",
     "utility": "Pacific Gas & Electric Co",
-    "baseline_compensation":  0.07584,
-    "compensation_charge_units":"$/kWh"
-
+    "baseline_compensation":  -0.07584
+   
   }]
