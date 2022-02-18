@@ -75,10 +75,19 @@ class OpenEI_tariff(object):
                 return
 
         # Else, call the OpenEI API
-        r = requests.get(self.URL_OPENEI, params=self.req_param)
-        data_openei = r.json()
         data_filtered = []
-        data_filtered += self.filter_data(data_openei)
+        end_reached = False
+        while not end_reached:
+            r = requests.get(self.URL_OPENEI, params=self.req_param)
+            data_openei = r.json()
+            data_filtered += self.filter_data(data_openei)
+            # print("Got {} untfiltered entries from {}".format(len(data_openei['items']), r.request.url))
+            if len(data_openei['items']) == int(self.LIMIT):
+                self.req_param['offset'] += int(self.LIMIT)
+                # print("Limit was hit, retry with offset {}".format(self.req_param['offset']))
+            else:
+                end_reached = True
+                # print("Limit {} was not hit with only {} untfiltered entries, ending API request".format(self.LIMIT, len(data_openei['items'])))
 
         # Store internally the filtered result
         self.data_openei = data_filtered
