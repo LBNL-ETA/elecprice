@@ -78,7 +78,19 @@ class OpenEI_tariff(object):
         r = requests.get(self.URL_OPENEI, params=self.req_param)
         data_openei = r.json()
         data_filtered = []
+        data_filtered += self.filter_data(data_openei)
 
+        # Store internally the filtered result
+        self.data_openei = data_filtered
+
+        # Store the result of this processed API request in a JSON file that has the name built from the tariff info
+        if store_as_json:
+            filename = self.json_filename
+            with open(CACHE_FOLDER+filename+'.json', 'w') as outfile:
+                json.dump(data_filtered, outfile, indent=2, sort_keys=True)
+
+    def filter_data(self, data_openei):
+        data_filtered = []
         for data_block in data_openei['items']:
             # Check the tariff name, this is stored in the field "name"
             if self.tariff_rate_of_interest not in data_block['name'] and self.tariff_rate_of_interest + '-' not in data_block['name']:
@@ -156,14 +168,8 @@ class OpenEI_tariff(object):
             block['startdate'] = datetime.fromtimestamp(block['startdate'], tz=pytz.timezone("UTC")).strftime('%Y-%m-%dT%H:%M:%S.000Z')
             block['enddate'] = datetime.fromtimestamp(block['enddate'], tz=pytz.timezone("UTC")).strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
-        # Store internally the filtered result
-        self.data_openei = data_filtered
+        return data_filtered
 
-        # Store the result of this processed API request in a JSON file that has the name built from the tariff info
-        if store_as_json:
-            filename = self.json_filename
-            with open(CACHE_FOLDER+filename+'.json', 'w') as outfile:
-                json.dump(data_filtered, outfile, indent=2, sort_keys=True)
 
     def read_from_json(self, filename=None):
         """
