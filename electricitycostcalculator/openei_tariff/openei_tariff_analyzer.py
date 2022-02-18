@@ -46,6 +46,7 @@ class OpenEI_tariff(object):
         self.req_param['direction'] = self.DIRECTION_SORT
         self.req_param['detail'] = self.DETAIL
         self.req_param['limit'] = self.LIMIT
+        self.req_param['offset'] = 0
         self.req_param['orderby'] = self.ORDER_BY_SORT
 
         # Post-req filter
