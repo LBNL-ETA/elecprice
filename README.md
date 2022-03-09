@@ -110,3 +110,31 @@ update_pdp_json(openei_tarif, pdp_dict, pdp_events_path):
 -   The code has only been tested for Commercial building. The tiers in energy tariff that can be encountered at the residential level are not supported.
 -   The tool doesn't take into account the reactive power cost (power factor adaptation or price per kVARh)
 -   The credits for the non-PDP event are applied even on the PDP event days. As the effect is neglectable for the price of energy, it might impact the demand cost. However, the user can read the demand credit days in the bill details and decide to apply it or not.
+
+# Copyright Notice
+
+Electricity Bill Calculator (elecprice) Copyright (c) 2022, The Regents
+of the University of California, through Lawrence Berkeley National
+Laboratory (subject to receipt of any required approvals from the U.S.
+Dept. of Energy). All rights reserved.
+
+If you have questions about your rights to use or distribute this software,
+please contact Berkeley Lab's Intellectual Property Office at
+IPO@lbl.gov.
+
+NOTICE.  This Software was developed under funding from the U.S. Department
+of Energy and the U.S. Government consequently retains certain rights.  As
+such, the U.S. Government has been granted for itself and others acting on
+its behalf a paid-up, nonexclusive, irrevocable, worldwide license in the
+Software to reproduce, distribute copies to the public, prepare derivative 
+works, and perform publicly and display publicly, and to permit others to do so.
+
+# License
+
+Electricity Bill Calculator (elecprice) is available under the following [license](https://github.com/LBNL-ETA/elecprice/blob/main/License.txt).
+
+# Development and contribution
+
+You may report any issues with using the github [Issues](https://github.com/LBNL-ETA/elecprice/issues) button.
+
+Contributions in the form of Pull Requests are always welcome.
