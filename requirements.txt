@@ -2,7 +2,7 @@ certifi==2024.7.4
 chardet==3.0.4
 convertdate==2.2.0
 holidays==0.10.1
-idna==2.9
+idna==3.7
 numpy==1.22.0
 pandas==1.0.3
 PyMeeus==0.3.7
